@@ -1,11 +1,33 @@
 const csv = require('csv-parser');
 const fs = require('fs');
-const { listenerCount } = require('process');
-
-
 
 try {
     var arguments = process.argv;
+    checkArguments(arguments);
+    var input_file = arguments[2];
+    var colonna = parseInt(arguments[3]);
+    var chiave = arguments[4];
+    var result = [];
+
+    if (fs.existsSync(input_file)) {
+        var input = fs.createReadStream(input_file);
+
+        input.pipe(csv(['riga', 'cognome', 'nome', 'data']))
+            .on('data', (row) => {
+                result = findRow(row);   
+            })
+            .on('end', () => {
+                checkResult(result);
+            });
+    } else {
+        console.log("Non esiste nessun file con questo nome")
+    }
+}catch(e){
+    console.error(e);
+}
+
+//funzione check dei parametri passati da linea di comando
+function checkArguments(arguments){
     var errors = [];
 
     if (typeof arguments[2] === "undefined") {
@@ -21,45 +43,38 @@ try {
     if (errors.length > 0) {
         throw errors.join('\n');
     }
+  }
 
-    var input_file = arguments[2];
-    var colonna = parseInt(arguments[3]);
-    var chiave = arguments[4];
-    var result = [];
-
-    if (fs.existsSync(input_file)) {
-        var input = fs.createReadStream(input_file);
-
-        input.pipe(csv(['riga', 'cognome', 'nome', 'data']))
-            .on('data', (row) => {
-                    switch(colonna){
-                        case(0):
-                            if(row.riga == chiave)
-                                result.push(row);
-                            break;
-                        case(1):
-                            if(row.cognome == chiave)
-                                result.push(row);
-                                break;
-                        case(2):
-                            if(row.nome == chiave)
-                                result.push(row);
-                                break;
-                        case(3):
-                            if(row.data.slice(0, -1) == chiave)
-                                result.push(row);
-                                break;
-                        default: 
-                            throw 'Operazione illegale!';
-                    }
-                }
-            )
-            .on('end', () => {
-                result.forEach(res => console.log(res.riga+","+res.cognome+","+res.nome+","+res.data));
-            });
-    } else {
-        console.log("Non esiste nessun file con questo nome")
+//funzione di ricerca secondo i criteri specificati da linea di comando
+function findRow(row) {
+    switch(colonna){
+        case(0):
+            if(row.riga == chiave)
+                result.push(row);
+            break;
+        case(1):
+            if(row.cognome == chiave)
+                result.push(row);
+                break;
+        case(2):
+            if(row.nome == chiave)
+                result.push(row);
+                break;
+        case(3):
+            if(row.data.slice(0, -1) == chiave)
+                result.push(row);
+                break;
+        default: 
+            throw 'Operazione illegale!';
     }
-}catch(e){
-    console.error(e);
-}
+    return result;
+  }
+
+  //funzione che ritorna il risultato della ricerca, se esiste
+  function checkResult(result){
+    if(result.length!=0)
+        result.forEach(res => console.log(res.riga+","+res.cognome+","+res.nome+","+res.data));
+    else
+        console.log("Nel file non esiste una riga contenente la chiave di ricerca nella colonna specificata");
+  }
+
