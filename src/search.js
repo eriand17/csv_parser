@@ -3,15 +3,13 @@ const fs = require('fs');
 
 try {
     var arguments = process.argv;
-    checkArguments(arguments);
     var input_file = arguments[2];
-    var colonna = parseInt(arguments[3]);
-    var chiave = arguments[4];
-    var result = [];
-
     if (fs.existsSync(input_file)) {
+        checkArguments(arguments);
+        var colonna = parseInt(arguments[3]);
+        var chiave = arguments[4];
+        var result = [];    
         var input = fs.createReadStream(input_file);
-
         input.pipe(csv(['riga', 'cognome', 'nome', 'data']))
             .on('data', (row) => {
                 result = findRow(row);   
